@@ -22,14 +22,17 @@ class LoginViewModel : BaseViewModel() {
 
   val userLiveData = StateLiveData<User?>()
 
+
   fun login(username: String, password: String) {
 
     viewModelScope.launch {
-      // reponse.login(username, password)
-      //   .getOrNull()
-      //   ?.let {
-      //     Log.i("user", it.toString())
-      //   }
+      // 不需要loading
+      reponse.login(username, password)
+        .getOrNull()
+        ?.let {
+          Log.i("user", it.toString())
+        }
+      // 需要loading
       launchWithLoading(requestBlock = {
         reponse.login(username, password)
       }, resultCallback = {
