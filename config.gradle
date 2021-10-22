@@ -1,0 +1,30 @@
+// 扩展块
+ext {
+  androidID = [compileSdkVersion: 31,
+
+               applicationId    : "com.wuc.kotlin_coroutines_net",
+               minSdkVersion    : 21,
+               targetSdkVersion : 31,
+               versionCode      : 1,
+               versionName      : "1.0"]
+
+  version = [lifecycle_version: "2.4.0-rc01",
+             activity_version : "1.3.1",
+             fragment_version : "1.3.6"]
+  // 依赖相关的
+  dependenciesApi = [// ViewModel
+                     "lifecycle-viewmodel-ktx": "androidx.lifecycle:lifecycle-viewmodel-ktx:${version.lifecycle_version}",
+                     "core-ktx"               : "androidx.core:core-ktx:1.6.0",
+                     // alternately - if using Java8, use the following instead of lifecycle-compiler
+                     "lifecycle-common-java8" : "androidx.lifecycle:lifecycle-common-java8:${version.lifecycle_version}",
+                     "activity-ktx"           : "androidx.activity:activity-ktx:${version.activity_version}",
+                     "fragment-ktx"           : "androidx.fragment:fragment-ktx:${version.fragment_version}",]
+  // 网络依赖相关的
+  dependenciesNet = ["gson"               : "com.google.code.gson:gson:2.8.8",
+                     // 为了不引入Context，先用LiveDataBus发送toast
+                     "livedatabus"        : 'io.github.jeremyliao:live-event-bus-x:1.8.0',
+                     "okhttp3"            : "com.squareup.okhttp3:okhttp:4.9.2",
+                     "retrofit"           : 'com.squareup.retrofit2:retrofit:2.9.0',
+                     "converter-gson"     : 'com.squareup.retrofit2:converter-gson:2.9.0',
+                     "logging-interceptor": "com.squareup.okhttp3:logging-interceptor:4.9.2",]
+}
