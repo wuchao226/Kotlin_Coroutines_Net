@@ -9,6 +9,7 @@ import com.wuc.base.base.BaseViewModel
 import com.wuc.kotlin_coroutines_net.bean.User
 import com.wuc.network.ApiResponse
 import com.wuc.network.getOrNull
+import com.wuc.network.guardSuccess
 import com.wuc.network.observer.StateLiveData
 import kotlinx.coroutines.launch
 
@@ -32,6 +33,19 @@ class LoginViewModel : BaseViewModel() {
         ?.let {
           Log.i("user", it.toString())
         }
+
+      // getOrNull 常用于后接一个 ?.let 只处理成功情况；
+      // 如果失败的情况需要做些动作，则需用 guardSuccess
+      // Nothing 是一个 空类型
+      val user: User? = reponse.login(username, password)
+        .guardSuccess {
+          // 网络请求不是 ApiSuccessResponse 的业务逻辑处理
+          // ...
+          return@launch
+        }
+      // ...
+      // 拿到非 null 的 User 继续后面的业务逻辑
+
       // 需要loading
       launchWithLoading(requestBlock = {
         reponse.login(username, password)
