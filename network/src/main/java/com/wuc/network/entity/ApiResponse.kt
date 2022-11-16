@@ -29,7 +29,7 @@ open class ApiResponse<T>(
 }
 
 // 正常响应情况调用方不需要 errcode, msg
-data class ApiSuccessResponse<T>(val response: T) : ApiResponse<T>(data = response)
+data class ApiSuccessResponse<T>g(val response: T) : ApiResponse<T>(data = response)
 
 class ApiEmptyResponse<T> : ApiResponse<T>()
 

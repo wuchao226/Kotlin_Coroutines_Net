@@ -3,7 +3,7 @@ package com.wuc.network
 /**
  * @author : wuchao5
  * @date : 2022/11/15 14:46
- * @desciption : 扩展 ApiResponse，在 LiveData 的 Observer() 来判断是哪种数据类，进行相应的回调处理
+ * @desciption : 扩展 ApiResponse，在 ApiResponse 的 parseData() 来判断是哪种数据类，进行相应的回调处理
  */
 
 fun <T> ApiResponse<T>.parseData(listenerBuilder: ResultBuilder<T>.() -> Unit) {
