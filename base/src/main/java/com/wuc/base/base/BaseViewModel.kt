@@ -2,9 +2,7 @@ package com.wuc.base.base
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jeremyliao.liveeventbus.LiveEventBus
 import com.wuc.network.ApiResponse
-import com.wuc.network.LOADING_STATE
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
@@ -21,21 +19,21 @@ open class BaseViewModel : ViewModel() {
   /**
    * 显示加载框
    */
-  private fun showLoading() {
-    LiveEventBus.get<Boolean>(LOADING_STATE).post(true)
-  }
-
-  /**
-   * 隐藏加载框
-   */
-  private fun stopLoading() {
-    LiveEventBus.get<Boolean>(LOADING_STATE).post(false)
-  }
+  // private fun showLoading() {
+  //   // LiveEventBus.get<Boolean>(LOADING_STATE).post(true)
+  // }
+  //
+  // /**
+  //  * 隐藏加载框
+  //  */
+  // private fun stopLoading() {
+  //   // LiveEventBus.get<Boolean>(LOADING_STATE).post(false)
+  // }
 
   /**
    * 展示 loading 的网络请求
    */
-  protected fun <T> launchWithLoading(
+  /*protected fun <T> launchWithLoading(
     // 网络请求执行方法
     requestBlock: suspend () -> ApiResponse<T>,
     // 结果的回调
@@ -52,5 +50,5 @@ open class BaseViewModel : ViewModel() {
         resultCallback(it)
       }
     }
-  }
+  }*/
 }

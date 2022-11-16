@@ -1,16 +1,16 @@
 package com.wuc.kotlin_coroutines_net.login
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wuc.base.base.BaseViewModel
+import com.wuc.base.util.launchFlow
 import com.wuc.kotlin_coroutines_net.bean.User
-import com.wuc.network.ApiResponse
-import com.wuc.network.getOrNull
-import com.wuc.network.guardSuccess
-import com.wuc.network.observer.StateLiveData
+import com.wuc.kotlin_coroutines_net.bean.WxArticleBean
+import com.wuc.network.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -19,16 +19,34 @@ import kotlinx.coroutines.launch
  * @desciption :
  */
 class LoginViewModel : BaseViewModel() {
-  private val reponse by lazy { LoginRepository() }
+  private val repository by lazy { LoginRepository() }
+  // 使用StateFlow 替代livedata
+//    val wxArticleLiveData = StateMutableLiveData<List<WxArticleBean>>()
 
-  val userLiveData = StateLiveData<User?>()
+  private val _uiState = MutableStateFlow<ApiResponse<List<WxArticleBean>>>(ApiResponse())
+  val uiState: StateFlow<ApiResponse<List<WxArticleBean>>> = _uiState.asStateFlow()
 
+  suspend fun requestNet() {
+    _uiState.value = repository.fetchWxArticleFromNet()
+  }
+
+  suspend fun requestNetError() {
+    _uiState.value = repository.fetchWxArticleError()
+  }
+
+  /**
+   * 场景：不需要监听数据变化
+   */
+  suspend fun login2(username: String, password: String): ApiResponse<User?> {
+    return repository.login(username, password)
+  }
+
+  val userLiveData = StateMutableLiveData<User?>()
 
   fun login(username: String, password: String) {
-
     viewModelScope.launch {
       // 不需要loading
-      reponse.login(username, password)
+      repository.login(username, password)
         .getOrNull()
         ?.let {
           Log.i("user", it.toString())
@@ -37,7 +55,7 @@ class LoginViewModel : BaseViewModel() {
       // getOrNull 常用于后接一个 ?.let 只处理成功情况；
       // 如果失败的情况需要做些动作，则需用 guardSuccess
       // Nothing 是一个 空类型
-      val user: User? = reponse.login(username, password)
+      val user: User? = repository.login(username, password)
         .guardSuccess {
           // 网络请求不是 ApiSuccessResponse 的业务逻辑处理
           // ...
@@ -45,18 +63,6 @@ class LoginViewModel : BaseViewModel() {
         }
       // ...
       // 拿到非 null 的 User 继续后面的业务逻辑
-
-      // 需要loading
-      launchWithLoading(requestBlock = {
-        reponse.login(username, password)
-      }, resultCallback = {
-        userLiveData.value = it
-        it
-          .getOrNull()
-          ?.let { user ->
-            Log.i("user", user.toString())
-          }
-      })
     }
   }
 }

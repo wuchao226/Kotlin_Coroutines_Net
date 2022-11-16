@@ -1,20 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<FrameLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
-  android:layout_height="match_parent"
-  tools:context=".MainActivity">
+  android:layout_height="match_parent">
 
-  <androidx.appcompat.widget.AppCompatButton
-    android:id="@+id/btn_login"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="登录"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintLeft_toLeftOf="parent"
-    app:layout_constraintRight_toRightOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical">
+
+      <Button
+        android:id="@+id/bt_login"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1"
+        android:text="登录" />
+
+      <Button
+        android:id="@+id/btn_net"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="请求网络" />
+
+      <Button
+        android:id="@+id/btn_net_error"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="请求网络错误" />
+
+    </LinearLayout>
+
+    <TextView
+      android:id="@+id/tv_content"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_margin="10dp"
+      android:layout_weight="1"
+      android:text="网络请求结果：" />
+
+    <ImageView
+      android:id="@+id/iv_content"
+      android:layout_width="match_parent"
+      android:layout_height="400dp"
+      android:layout_margin="10dp"
+      android:src="@mipmap/icon_net_error"
+      android:visibility="gone" />
+  </LinearLayout>
+
+</FrameLayout>

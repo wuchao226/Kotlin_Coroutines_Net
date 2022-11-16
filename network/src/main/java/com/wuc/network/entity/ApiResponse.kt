@@ -1,6 +1,5 @@
 package com.wuc.network
 
-import android.util.Log
 import java.io.Serializable
 
 /**
@@ -23,24 +22,23 @@ open class ApiResponse<T>(
   // 请求是否成功
   val isSuccess: Boolean
     get() = errorCode == 0
+
+  override fun toString(): String {
+    return "ApiResponse(data=$data, errorCode=$errorCode, errorMsg=$errorMsg, error=$error)"
+  }
 }
 
 // 正常响应情况调用方不需要 errcode, msg
-data class ApiSuccessResponse<T>(val response: T?) : ApiResponse<T>(data = response)
+data class ApiSuccessResponse<T>(val response: T) : ApiResponse<T>(data = response)
 
 class ApiEmptyResponse<T> : ApiResponse<T>()
 
 
 // 业务逻辑异常
-data class ApiBizError<T>(
-  override val errorCode: Int?,
-  override val errorMsg: String?
-) : ApiResponse<T>(errorCode = errorCode, errorMsg = errorMsg)
+data class ApiFailedResponse<T>(override val errorCode: Int?, override val errorMsg: String?) : ApiResponse<T>(errorCode = errorCode, errorMsg = errorMsg)
 
 // 其他技术异常：网络请求错误、反序列化错误等
-data class ApiOtherError<T>(
-  val throwable: Throwable
-) : ApiResponse<T>(error = throwable)
+data class ApiErrorResponse<T>(val throwable: Throwable) : ApiResponse<T>(error = throwable)
 
 
 /**
@@ -57,7 +55,7 @@ lifecycleScope.launch {
  */
 fun <T> ApiResponse<T>.getOrNull(): T? = when (this) {
   is ApiSuccessResponse -> data
-  is ApiBizError, is ApiOtherError, is ApiEmptyResponse -> null
+  is ApiFailedResponse, is ApiErrorResponse, is ApiEmptyResponse -> null
   else -> null
 }
 

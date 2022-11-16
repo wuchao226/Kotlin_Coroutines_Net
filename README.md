@@ -1,19 +1,51 @@
 # Kotlin_Coroutines_Net
-封装 Retrofit+协程，实现优雅快速的网络请求
+封装 Retrofit + 协程 + Flow，实现优雅快速的网络请求
 
 ```
 class LoginRepository : BaseRepository() {
-  private val service by lazy { getService(UserApi::class.java) }
+  private val mService by lazy { service }
 
   suspend fun login(username: String, password: String): ApiResponse<User?> {
-    return executeHttp { service.login(username, password) }
+    return executeHttp { mService.login(username, password) }
+  }
+
+  suspend fun fetchWxArticleFromNet(): ApiResponse<List<WxArticleBean>> {
+    return executeHttp {
+      mService.getWxArticle()
+    }
+  }
+
+  suspend fun fetchWxArticleError(): ApiResponse<List<WxArticleBean>> {
+    return executeHttp {
+      mService.getWxArticleError()
+    }
   }
 }
 ```
 #### LoginViewModel 中使用
 ```
 class LoginViewModel : BaseViewModel() {
-  private val reponse by lazy { LoginRepository() }
+   private val repository by lazy { LoginRepository() }
+  // 使用StateFlow 替代livedata
+//    val wxArticleLiveData = StateMutableLiveData<List<WxArticleBean>>()
+
+  private val _uiState = MutableStateFlow<ApiResponse<List<WxArticleBean>>>(ApiResponse())
+  val uiState: StateFlow<ApiResponse<List<WxArticleBean>>> = _uiState.asStateFlow()
+
+  suspend fun requestNet() {
+    _uiState.value = repository.fetchWxArticleFromNet()
+  }
+
+  suspend fun requestNetError() {
+    _uiState.value = repository.fetchWxArticleError()
+  }
+
+  /**
+   * 场景：不需要监听数据变化
+   */
+  suspend fun login2(username: String, password: String): ApiResponse<User?> {
+    return repository.login(username, password)
+  }
 
   val userLiveData = StateLiveData<User?>()
 
@@ -21,7 +53,7 @@ class LoginViewModel : BaseViewModel() {
     
     viewModelScope.launch {
       // 不需要 loading 的使用
-      reponse.login(username, password)
+      repository.login(username, password)
         .getOrNull()
         ?.let {
           Log.i("user", it.toString())
@@ -30,7 +62,7 @@ class LoginViewModel : BaseViewModel() {
       // getOrNull 常用于后接一个 ?.let 只处理成功情况；
       // 如果失败的情况需要做些动作，则需用 guardSuccess
       // Nothing 是一个 空类型
-      val user: User? = reponse.login(username, password)
+      val user: User? = repository.login(username, password)
         .guardSuccess {
           // 网络请求不是 ApiSuccessResponse 的业务逻辑处理
           // ...
@@ -38,18 +70,6 @@ class LoginViewModel : BaseViewModel() {
         }
       // ...
       // 拿到非 null 的 User 继续后面的业务逻辑
-        
-      // 需要 loading 的使用
-      launchWithLoading(requestBlock = {
-        reponse.login(username, password)
-      }, resultCallback = {
-        userLiveData.value = it
-        it
-          .getOrNull()
-          ?.let { user ->
-            Log.i("user", user.toString())
-          }
-      })
     }
   }
 }
@@ -64,44 +84,83 @@ class MainActivity : BaseActivity() {
     mBinding = ActivityMainBinding.inflate(layoutInflater)
     setContentView(mBinding.root)
 
-    mBinding.btnLogin.setOnClickListener {
-      // 请求网络
-      mViewModel.login("FastJetpack", "FastJetpack")
+    initData()
+    initObserver()
+  }
+  private fun initObserver() {
+    mViewModel.uiState.collectIn(this, Lifecycle.State.STARTED) {
+      onSuccess = { result: List<WxArticleBean>? ->
+        showNetErrorPic(false)
+        mBinding.tvContent.text = result.toString()
+      }
+      onComplete = { Log.i("MainActivity", ": onComplete") }
+
+      onFailed = { code, msg -> toast("errorCode: $code   errorMsg: $msg") }
+
+      onError = { showNetErrorPic(true) }
     }
-    // 注册监听
-    mViewModel.userLiveData.observerState(this) {
-      onSuccess {
-        Log.i("user", "livedata-->" + it.toString())
+  }
+
+  private fun showNetErrorPic(isShowError: Boolean) {
+    mBinding.tvContent.isGone = isShowError
+    mBinding.ivContent.isVisible = isShowError
+  }
+
+  private fun initData() {
+    mBinding.btnNet.setOnClickListener { requestNet() }
+
+    mBinding.btnNetError.setOnClickListener {
+      showNetErrorPic(false)
+      requestNetError()
+    }
+
+    mBinding.btLogin.setOnClickListener {
+      showNetErrorPic(false)
+      login()
+    }
+  }
+
+  private fun requestNet() {
+    launchWithLoading(mViewModel::requestNet)
+  }
+
+  private fun requestNetError() {
+    launchWithLoading(mViewModel::requestNetError)
+  }
+
+  /**
+   * 链式调用，返回结果的处理都在一起，viewmodel中不需要创建一个livedata对象
+   * 适用于不需要监听数据变化的场景
+   * 屏幕旋转，Activity销毁重建，数据会消失
+   */
+  private fun login() {
+    launchWithLoadingAndCollect(resquestBlock = {
+      mViewModel.login2("FastJetpack", "FastJetpack")
+    }) {
+      onSuccess = {
+        mBinding.tvContent.text = it.toString()
+      }
+      onFailed = { errorCode, errorMsg ->
+        toast("errorCode: $errorCode   errorMsg: $errorMsg")
       }
     }
   }
-}
-```
-### 如果需要单独处理每一个回调
-```
-mViewModel.userLiveData.observeState(this) {
-    onSuccess { data ->
-        Log.i("wutao","网络请求的结果是：$data")
-    }
-    
-    onEmpty{
-        Log.i("wutao", "返回的数据是空，展示空布局")
-    }
-    
-    onFailed {
-        Log.i("wutao", "后台返回的errorCode: $it")
-    }
 
-    onException { e ->
-        Log.i("wutao","这是非后台返回的异常回调")
-    }
+  /**
+   * 将Flow转变为LiveData
+   */
+  private fun loginAsLiveData() {
+    val loginLiveData = launchFlow(resquestBlock = {
+      mViewModel.login2("FastJetpack", "FastJetpack")
+    }).asLiveData()
 
-    onShowLoading {
-         Log.i("wutao","自定义单个请求的Loading")
+    loginLiveData.observerState(this) {
+      onSuccess = {
+        mBinding.tvContent.text = it.toString()
+      }
+      onFailed =
+        { errorCode, errorMsg -> toast("errorCode: $errorCode   errorMsg: $errorMsg") }
     }
-
-    onComplete {
-        Log.i("wutao","网络请求结束")
-    }
+  }
 }
 ```

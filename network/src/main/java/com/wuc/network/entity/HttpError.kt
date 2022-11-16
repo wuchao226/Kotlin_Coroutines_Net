@@ -1,10 +1,7 @@
-package com.wuc.network.exception
+package com.wuc.network.entity
 
 import android.util.Log
 import com.google.gson.JsonParseException
-import com.wuc.network.ApiResponse
-import com.wuc.network.BuildConfig
-import com.wuc.network.R
 import com.wuc.network.toast
 import retrofit2.HttpException
 import java.net.SocketTimeoutException
@@ -22,7 +19,7 @@ enum class HttpError(var code: Int, var errorMsg: String) {
 /**
  * 业务逻辑异常给用户展示错误信息
  */
-internal fun handleBizError(errorCode: Int?, msg: String?) {
+internal fun handlingApiExceptions(errorCode: Int?, msg: String?) {
   when (errorCode) {
     HttpError.TOKEN_EXPIRE.code -> toast(HttpError.TOKEN_EXPIRE.errorMsg)
     HttpError.PARAMS_ERROR.code -> toast(HttpError.PARAMS_ERROR.errorMsg)
@@ -33,7 +30,7 @@ internal fun handleBizError(errorCode: Int?, msg: String?) {
 /**
  * 非后台返回错误，捕获到的异常
  */
-internal fun handleOtherError(throwable: Throwable) {
+internal fun handlingExceptions(throwable: Throwable) {
   Log.e("error", throwable.message ?: "throwwwwwwww")
   when (throwable) {
     is HttpException -> {
