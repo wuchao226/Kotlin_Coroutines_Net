@@ -8,12 +8,15 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.lifecycleScope
 import com.wuc.base.base.BaseActivity
 import com.wuc.base.util.*
 import com.wuc.kotlin_coroutines_net.bean.WxArticleBean
 import com.wuc.kotlin_coroutines_net.databinding.ActivityMainBinding
 import com.wuc.kotlin_coroutines_net.login.LoginViewModel
 import com.wuc.network.observerState
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.shareIn
 
 class MainActivity : BaseActivity() {
   private val mViewModel by viewModels<LoginViewModel>()
@@ -28,6 +31,29 @@ class MainActivity : BaseActivity() {
   }
 
   private fun initObserver() {
+    // 使用shareIn()将冷流转换成共享热流
+    // scope: sharedFlow的启动作用域
+    // started:启动策略
+    //    SharingStarted.WhileSubscribed()  如果存在数据收集者,上游数据提供方保持活跃状态
+    //    SharingStarted.Eagerly 立即启动数据提供方
+    //    SharingStarted.Lazily存在数据收集者开始提供数据，并且永远保持活跃状态
+    // replay 代表重放的数据个数
+    //    replay 为0 代表不重放，也就是没有粘性
+    //    replay 为1 代表重放最新的一个数据，后来的接收器能接受1个最新数据。
+    //    replay 为2 代表重放最新的两个数据，后来的接收器能接受2个最新数据。
+    mViewModel.uiState.shareIn(lifecycleScope, SharingStarted.Lazily, 0)
+      .collectIn(this, Lifecycle.State.STARTED) {
+        onSuccess = { result: List<WxArticleBean>? ->
+          showNetErrorPic(false)
+          mBinding.tvContent.text = result.toString()
+        }
+        onComplete = { Log.i("MainActivity", ": onComplete") }
+
+        onFailed = { code, msg -> toast("errorCode: $code   errorMsg: $msg") }
+
+        onError = { showNetErrorPic(true) }
+      }
+
     mViewModel.uiState.collectIn(this, Lifecycle.State.STARTED) {
       onSuccess = { result: List<WxArticleBean>? ->
         showNetErrorPic(false)

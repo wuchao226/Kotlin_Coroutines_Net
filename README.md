@@ -88,6 +88,28 @@ class MainActivity : BaseActivity() {
     initObserver()
   }
   private fun initObserver() {
+    // scope: sharedFlow的启动作用域
+    // started:启动策略
+    //    SharingStarted.WhileSubscribed()  如果存在数据收集者,上游数据提供方保持活跃状态
+    //    SharingStarted.Eagerly 立即启动数据提供方
+    //    SharingStarted.Lazily存在数据收集者开始提供数据，并且永远保持活跃状态
+    // replay 代表重放的数据个数
+    //    replay 为0 代表不重放，也就是没有粘性
+    //    replay 为1 代表重放最新的一个数据，后来的接收器能接受1个最新数据。
+    //    replay 为2 代表重放最新的两个数据，后来的接收器能接受2个最新数据。
+    mViewModel.uiState.shareIn(lifecycleScope, SharingStarted.Lazily, 0)
+      .collectIn(this, Lifecycle.State.STARTED) {
+        onSuccess = { result: List<WxArticleBean>? ->
+          showNetErrorPic(false)
+          mBinding.tvContent.text = result.toString()
+        }
+        onComplete = { Log.i("MainActivity", ": onComplete") }
+
+        onFailed = { code, msg -> toast("errorCode: $code   errorMsg: $msg") }
+
+        onError = { showNetErrorPic(true) }
+      }
+      
     mViewModel.uiState.collectIn(this, Lifecycle.State.STARTED) {
       onSuccess = { result: List<WxArticleBean>? ->
         showNetErrorPic(false)

@@ -8,6 +8,7 @@ import com.wuc.base.base.IUiView
 import com.wuc.network.ApiResponse
 import com.wuc.network.ResultBuilder
 import com.wuc.network.parseData
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -73,6 +74,9 @@ fun <T> IUiView.launchWithLoadingAndCollect(
   }
 }
 
+/**
+ * 用感知生命周期的方式收集流
+ */
 fun <T> Flow<ApiResponse<T>>.collectIn(
   lifecycleOwner: LifecycleOwner,
   minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
