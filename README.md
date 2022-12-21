@@ -1,6 +1,8 @@
 # Kotlin_Coroutines_Net
 封装 Retrofit + 协程 + Flow，实现优雅快速的网络请求
 
+>[使用 Kotlin Flow 优化你的网络请求框架，减少模板代码](https://juejin.cn/post/7022823222928211975)
+
 ```
 class LoginRepository : BaseRepository() {
   private val mService by lazy { service }
